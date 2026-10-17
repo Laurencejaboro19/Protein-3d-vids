@@ -1,0 +1,6 @@
+inputs/
+frames/
+out/
+*.mp4
+*_docked.pdb
+*_prep.pdb
