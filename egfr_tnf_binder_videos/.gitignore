@@ -1,0 +1,9 @@
+egfr/
+tnf/
+egfr_k/
+tnf_k/
+egfr_src/
+tnf_src/
+fr_*/
+*.mp4
+__pycache__/

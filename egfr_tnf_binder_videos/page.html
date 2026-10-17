@@ -1,0 +1,55 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+html,body{margin:0;background:#fff;font-family:Helvetica,Arial,sans-serif;color:#10213f}
+#wrap{width:1080px;height:1350px;position:relative;overflow:hidden;background:#fff}
+#v{position:absolute;left:0;top:250px;width:1080px;height:960px}
+#h1{position:absolute;left:60px;top:46px;font-size:34px;letter-spacing:6px;font-weight:600;color:#7a869c;text-transform:uppercase}
+#h2{position:absolute;left:60px;top:96px;font-size:88px;font-weight:700;letter-spacing:-1px;color:#0f2a56}
+#sub{position:absolute;left:62px;top:206px;font-size:26px;color:#7a869c}
+#cnt{position:absolute;left:60px;bottom:96px;font-size:30px;color:#0f2a56}
+#cnt b{font-size:96px;font-weight:700;margin-right:14px;color:#0f2a56}
+#foot{position:absolute;left:60px;right:60px;bottom:34px;font-size:20px;color:#9aa5b8}
+#bar{position:absolute;left:0;bottom:0;height:8px;background:#19b6a6}
+</style></head><body><div id="wrap">
+<div id="h1">Protein Design for Africa</div>
+<div id="h2"></div><div id="sub"></div>
+<div id="v"></div>
+<div id="cnt"></div>
+<div id="foot">Boltz-2 predicted complexes &middot; computational predictions only</div>
+<div id="bar"></div>
+</div>
+<script src="3Dmol-min.js"></script>
+<script>
+const Q=new URLSearchParams(location.search);const KEY=Q.get('n');
+const CFG={egfr:{zoom:0.74,dir:'egfr_k',h2:'EGFR binders',tgt:'Target: human EGFR, domain III',unit:'de novo binders on the His409 face'},
+           tnf:{zoom:0.95,dir:'tnf_k',h2:'TNF-α binders',tgt:'Target: human TNF-α trimer',unit:'de novo binders on the TNF groove'}}[KEY];
+document.getElementById('h2').textContent=CFG.h2;
+const FPS=24,N=600,P1=144,START=168,END=560,FADE=10;
+let v,nb,cur=0,meta;
+function hue(f){const h=(180+210*f)%360;return 'hsl('+h.toFixed(0)+',85%,50%)';}
+function hex(f){const h=((180+210*f)%360)/360,s=.85,l=.5;const a=s*Math.min(l,1-l);const k=n=>(n+h*12)%12;const g=n=>{const c=l-a*Math.max(-1,Math.min(k(n)-3,9-k(n),1));return Math.round(255*c).toString(16).padStart(2,'0')};return '#'+g(0)+g(8)+g(4);}
+window.ready=(async()=>{
+  meta=await (await fetch(CFG.dir+'/meta.json')).json();nb=meta.n;
+  v=$3Dmol.createViewer(document.getElementById('v'),{backgroundColor:'white',antialias:true});
+  v.addModel(await (await fetch(CFG.dir+'/target.pdb')).text(),'pdb');
+  for(let i=0;i<nb;i++){v.addModel(await (await fetch(CFG.dir+'/b'+String(i).padStart(2,'0')+'.pdb')).text(),'pdb');}
+  v.setStyle({model:0},{});
+  await v.addSurface($3Dmol.SurfaceType.MS,{color:'#c4c9d1',opacity:1},{model:0},{model:0});
+  for(let i=1;i<=nb;i++)v.setStyle({model:i},{});
+  v.zoomTo({model:0});v.zoom(CFG.zoom);v.render();return true;
+})();
+const sm=t=>t*t*(3-2*t);
+function angleAt(i){ if(i<P1) return 360*sm(i/P1); const u=(i-P1)/(N-1-P1); return 360+34*u; }
+window.render=(i)=>{
+  const a=angleAt(i);v.rotate(a-cur,'y');cur=a;
+  let shown=0;
+  for(let k=0;k<nb;k++){
+    const s=START+k*(END-START)/nb; const op=Math.max(0,Math.min(1,(i-s)/FADE));
+    if(op>0){shown++; if(op<1||!window['_d'+k]){v.setStyle({model:k+1},{cartoon:{color:hex(nb>1?k/(nb-1):0),opacity:op,thickness:1.0}}); if(op>=1)window['_d'+k]=1;}}
+  }
+  document.getElementById('sub').textContent = i<START-6 ? CFG.tgt : 'Each colour is one designed binder, docked on the same site';
+  document.getElementById('cnt').innerHTML = shown? '<b>'+shown+'</b>'+CFG.unit : '';
+  document.getElementById('bar').style.width=(100*i/(N-1))+'%';
+  v.render();
+};
+</script></body></html>
