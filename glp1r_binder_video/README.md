@@ -1,39 +1,48 @@
-# GLP1R binder video (20 AlphaFold binders docked on the full receptor)
+# GLP1R binder video: 20 designs as Boltz-2.1 predicted complexes
 
-25 s, 1080x1350, 24 fps (600 frames), same look as `../egfr_tnf_binder_videos`. White page, GLP1R (PDB 6X18 chain R, 29-423,
-grey surface) with its long axis vertical for the whole video: one spin, then 16 bridge-site binders one at a time, the camera turns
-about the vertical axis, then 4 deep-site binders. Every binder has its own colour (20-colour palette in `page_glp1r.html`).
+25 s, 1080x1350, 24 fps (600 frames), no sound. White page, GLP1R surface (grey), one binder at a time in the order of the submission
+(rank 1 to 20). Each binder fades in and out inside its own time slot, the camera turns to face the binder, and the bottom-left counter
+reads `Binder N of 20 · de novo, <bridge|deep> site` with the ipTM and ipSAE from the submission CSV. Every binder has its own colour.
 
-## What the poses are (read this)
-Each binder is the real AlphaFold Server fold (model 0, binder alone). The pose on the receptor is NOT a predicted complex:
-`build_poses_af.py` places each rigid binder by random search + local refinement. Score = soft closeness to the hotspot residues
-of its designed site + interface size - clashes (no heavy-atom pair under 3.0 Å, at least 25 atoms within 4.8 Å).
-`verify_poses.py` re-reads the written PDBs and checks sequence = submitted sequence, site = designed site, clashes, contact size.
-Typical result: every binder touches the receptor (13-47 atoms within 4.5 Å), bridge binders touch 1-5 of 18 bridge hotspots at 4.5 Å,
-deep binders sit at the mouth of the deep pocket (0-1 of 9 hotspots at 4.5 Å, 1-3 at 6.5 Å) because the pocket is buried in the
-helix bundle. Do not describe the video as predicted complexes. `build_poses_schematic.py` is the older version that builds idealised
-helices from sequence alone (no structures needed).
+## What the structures are
+Each binder is shown in its own Boltz-2.1 refold (receptor chain A + binder chain B, full GLP1R 24-432). Nothing is docked by hand.
+`build_boltz_complexes.py` only moves each complex into one common frame (the PDB 6X18 receptor frame) by superposing the receptor
+C-alpha atoms of the transmembrane core (residues 145-390). The 20 Boltz receptors are not identical (TM-core RMSD to 6X18 is 1.8 to
+4.3 A; some have the ECD tilted differently), so the grey receptor changes slightly from one binder to the next. The page swaps the
+receptor only while no binder is visible. Tried and rejected: putting all 20 binders on one fixed 6X18 receptor. They kept only about
+4-36% of the contacts Boltz predicted, so it would show binding that is not real.
+Scores in the video come from the submission screen (mostly Boltz-2.2.1), the shapes from the Boltz-2.1 refolds, so ipTM can differ a little.
 
-## Files
+## What each file does
 | File | What it does |
 |---|---|
-| `build_poses_af.py` | Reads `af/fold_gN/*_model_0.cif` (N = submission rank), docks, writes `glp1r_k/target.pdb`, `bNN.pdb`, `meta.json` (incl. the receptor's long axis) |
-| `verify_poses.py` | Independent check table of the written poses |
-| `page_glp1r.html` | 3Dmol.js scene, vertical receptor, camera turns only about the vertical axis |
-| `render_glp1r.py` | `python3 render_glp1r.py <port> [frame,list]` screenshots frames with headless Chromium (Playwright) into `fr_glp1r/` |
-| `3Dmol-min.js` | 3Dmol.js (BSD-3) |
+| `powershell/01_boltz_install_and_login.ps1` | Installs the Boltz command-line tool (`boltz-api`) and signs you in through your browser. Worked on Windows. |
+| `powershell/02_download_boltz_results.ps1` | `boltz-api download-results` for each of the 20 job ids, then zips everything and counts the `.cif` files (20 of 20 when it works). |
+| `powershell/03_collect_cifs.ps1` | Copies only the 20 `.cif` files into `rank01.cif` ... `rank20.cif` and zips them (small enough to upload). |
+| `analyze_boltz.py` | For each complex: checks the binder sequence against the CSV, counts receptor residues within 4.5 A, bridge and deep hotspots touched, overlap with the GLP-1 footprint (6X18 chain P), TM-core RMSD to 6X18. Prints one line per design. |
+| `build_boltz_complexes.py` | Superposes each complex onto 6X18 (TM core), writes `glp1r_bz/rNN.pdb` (receptor), `bNN.pdb` (binder) and `meta.json` (ranks, sites, binder centroids, receptor axis, ipTM, ipSAE). |
+| `page_glp1r.html` | 3Dmol.js scene: receptor vertical, one surface per complex (only the active one shown), binder cartoon fades in and out per slot, camera angle per binder from the binder centroid, counter and scores. |
+| `render_glp1r.py` | `python3 render_glp1r.py <port> [frame,list]` screenshots the page frame by frame (Playwright, headless Chromium) into `fr_glp1r/`. |
+| `3Dmol-min.js` | 3Dmol.js (BSD-3). |
+| `legacy_rigid_docking/` | Earlier version: rigid AlphaFold monomers placed by random search on 6X18. They ran, but the poses are not predicted complexes and the deep binders could not reach the deep pocket (overlaps or outside placement). Kept for reference only. |
 
 ## Inputs (not included)
-- `6X18.pdb` from RCSB beside the scripts.
-- `top20.csv` with `priority_rank,site,source,sequence` (site = bridge or deep). The sequences are unpublished (see `top20.example.csv`).
-- `af/fold_gN/` unzipped AlphaFold Server results, one per rank.
+- `6X18.pdb` from RCSB, next to the scripts.
+- `top20.csv` with columns `priority_rank,site,source,sequence,iptm,ipsae` (sequences are unpublished; see `top20.example.csv`).
+- `bz/rank01.cif` ... `bz/rank20.cif` from `powershell/03_collect_cifs.ps1`.
 
 ## Run
 ```
+# Windows PowerShell: 01, then 02 (put your 20 job ids in it), then 03; unzip the cifs into bz/
 pip install gemmi numpy scipy pillow playwright && playwright install chromium
-python3 -I build_poses_af.py     # about 6 min on 2 cores
-python3 -I verify_poses.py
-python3 render_glp1r.py 8123     # 600 frames, about 35 min with software GL
+python3 -I analyze_boltz.py
+python3 -I build_boltz_complexes.py
+python3 render_glp1r.py 8123        # 600 frames, about 20 min with software GL
 ffmpeg -framerate 24 -i fr_glp1r/f%04d.png -c:v libx264 -pix_fmt yuv420p -crf 18 -movflags +faststart -an out.mp4
 ```
-The page footer is empty. Frames were checked by eye on Linux (software GL).
+Checked by eye on Linux (software GL). The PowerShell scripts were run on Windows by the author; the ids are placeholders in script 02.
+
+## Reading the results (from this run)
+Every Boltz complex has no heavy-atom pair closer than 2.4 A. Bridge-site designs touch 7 to 15 of the 18 bridge hotspots; the four
+deep-site designs touch 3 to 5 of the 9 deep hotspots at 4.5 A and also sit on the ECD and upper cleft. Two bridge-designed binders
+(ranks 5 and 19) reach 8 of 9 deep hotspots. These are predictions, not experiments.
