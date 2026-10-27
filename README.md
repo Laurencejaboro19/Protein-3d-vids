@@ -25,3 +25,7 @@ Rendering takes about 50 minutes for 600 frames.
 ## Caveats
 Antibody poses are restraint-docked, not predicted complexes. The ipTM shown is the VH-VL interface value from AlphaFold Server, not antibody-target confidence.
 Target chain colours were chosen to stay clear of the antibody colours (`scripts/pal.py`).
+
+## Other videos
+- `glp1r_binder_video/`: GLP1R, 20 binders as Boltz-2.1 predicted complexes.
+- `tfr1_binder_video/`: TfR1, 20 binders as Boltz-2.1 predicted complexes on the apical domain (same renderer, PowerShell download included).
