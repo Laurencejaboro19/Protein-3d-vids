@@ -1,0 +1,111 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+html,body{margin:0;background:#fff;font-family:Helvetica,Arial,sans-serif;color:#10213f}
+#wrap{width:1080px;height:1350px;position:relative;overflow:hidden;background:#fff}
+#v{position:absolute;left:0;top:250px;width:1080px;height:960px}
+#h1{position:absolute;left:60px;top:46px;font-size:34px;letter-spacing:6px;font-weight:600;color:#7a869c;text-transform:uppercase}
+#h2{position:absolute;left:60px;top:96px;font-size:88px;font-weight:700;letter-spacing:-1px;color:#0f2a56}
+#sub{position:absolute;left:62px;top:206px;font-size:26px;color:#7a869c}
+#cnt{position:absolute;left:60px;bottom:86px;font-size:30px;color:#0f2a56}
+#cnt .sc{font-size:30px;color:#4a5a78;margin-top:6px}
+#cnt b{font-size:96px;font-weight:700;margin-right:14px;color:#0f2a56}
+#foot{position:absolute;left:60px;right:60px;bottom:34px;font-size:20px;color:#9aa5b8}
+#bar{position:absolute;left:0;bottom:0;height:8px;background:#19b6a6}
+</style></head><body><div id="wrap">
+<div id="h1">Protein Design for Africa</div>
+<div id="h2"></div><div id="sub"></div>
+<div id="v"></div>
+<div id="cnt"></div>
+<div id="foot">Scores from the submission screen (Boltz-2.2.1). Predictions, not experiments.</div>
+<div id="bar"></div>
+</div>
+<script src="3Dmol-min.js"></script>
+<script>
+const CFG={zoom:1.5,dir:'glp1r_bz',h2:'GLP1R binders',tgt:'Target: human GLP1R, full receptor',
+           sub:'Each binder in its own Boltz-2.1 co-fold, placed on GLP-1R (PDB 6X18 frame)'};
+document.getElementById('h2').textContent=CFG.h2;
+// ---- timeline (frames at 24 fps, 600 total)
+const N=600,P1=144,START=26,END=594,FADE=10,TURN=40,TILT=-6,DRIFT_B=22,DRIFT_D=14;
+// ---- small 3x3 matrix / quaternion helpers
+const mul=(A,B)=>A.map((r,i)=>[0,1,2].map(j=>r[0]*B[0][j]+r[1]*B[1][j]+r[2]*B[2][j]));
+const rad=d=>d*Math.PI/180;
+const rotY=d=>{const c=Math.cos(rad(d)),s=Math.sin(rad(d));return [[c,0,s],[0,1,0],[-s,0,c]];};
+const rotX=d=>{const c=Math.cos(rad(d)),s=Math.sin(rad(d));return [[1,0,0],[0,c,-s],[0,s,c]];};
+function alignToZ(v){const n=Math.hypot(...v);v=v.map(x=>x/n);const ax=[v[1]*1-v[2]*0,v[2]*0-v[0]*1,0];const an=Math.hypot(...ax);
+  if(an<1e-8)return [[1,0,0],[0,1,0],[0,0,1]];const k=ax.map(x=>x/an),ang=Math.acos(Math.max(-1,Math.min(1,v[2])));
+  const K=[[0,-k[2],k[1]],[k[2],0,-k[0]],[-k[1],k[0],0]],K2=mul(K,K),s=Math.sin(ang),c=1-Math.cos(ang);
+  return [0,1,2].map(i=>[0,1,2].map(j=>(i==j?1:0)+s*K[i][j]+c*K2[i][j]));}
+function alignTo(u,t){const n=Math.hypot(...u);u=u.map(x=>x/n);const ax=[u[1]*t[2]-u[2]*t[1],u[2]*t[0]-u[0]*t[2],u[0]*t[1]-u[1]*t[0]];const an=Math.hypot(...ax);
+  const dt=u[0]*t[0]+u[1]*t[1]+u[2]*t[2];if(an<1e-8)return dt>0?[[1,0,0],[0,1,0],[0,0,1]]:[[1,0,0],[0,-1,0],[0,0,-1]];
+  const k=ax.map(x=>x/an),ang=Math.acos(Math.max(-1,Math.min(1,dt)));const K=[[0,-k[2],k[1]],[k[2],0,-k[0]],[-k[1],k[0],0]],K2=mul(K,K),s=Math.sin(ang),c=1-Math.cos(ang);
+  return [0,1,2].map(i=>[0,1,2].map(j=>(i==j?1:0)+s*K[i][j]+c*K2[i][j]));}
+const mv=(M,v)=>M.map(r=>r[0]*v[0]+r[1]*v[1]+r[2]*v[2]);
+const wrap=a=>{a=((a+180)%360+360)%360-180;return a;};
+// the receptor's long axis is kept vertical for the whole video; the camera only turns about that vertical axis
+const faceAngle=(MP,d)=>{const q=mv(MP,d);return -Math.atan2(q[0],q[2])*180/Math.PI;};
+const PAL=['#e6194B','#3cb44b','#4363d8','#f58231','#911eb4','#00a8c6','#f032e6','#9acd32','#008080','#9a6324','#800000','#d4a017','#000075','#ff69b4','#00a86b','#6a3d9a','#ff7f50','#1f78b4','#b15928','#2f4f4f'];
+function toQuat(m){const t=m[0][0]+m[1][1]+m[2][2];let x,y,z,w;
+  if(t>0){const s=Math.sqrt(t+1)*2;w=s/4;x=(m[2][1]-m[1][2])/s;y=(m[0][2]-m[2][0])/s;z=(m[1][0]-m[0][1])/s;}
+  else if(m[0][0]>m[1][1]&&m[0][0]>m[2][2]){const s=Math.sqrt(1+m[0][0]-m[1][1]-m[2][2])*2;w=(m[2][1]-m[1][2])/s;x=s/4;y=(m[0][1]+m[1][0])/s;z=(m[0][2]+m[2][0])/s;}
+  else if(m[1][1]>m[2][2]){const s=Math.sqrt(1+m[1][1]-m[0][0]-m[2][2])*2;w=(m[0][2]-m[2][0])/s;x=(m[0][1]+m[1][0])/s;y=s/4;z=(m[1][2]+m[2][1])/s;}
+  else{const s=Math.sqrt(1+m[2][2]-m[0][0]-m[1][1])*2;w=(m[1][0]-m[0][1])/s;x=(m[0][2]+m[2][0])/s;y=(m[1][2]+m[2][1])/s;z=s/4;}
+  return [x,y,z,w];}
+function slerp(a,b,t){let d=a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3];if(d<0){b=b.map(x=>-x);d=-d;}
+  if(d>0.9995){const r=a.map((x,i)=>x+t*(b[i]-x));const n=Math.hypot(...r);return r.map(x=>x/n);}
+  const th=Math.acos(d),s=Math.sin(th),w1=Math.sin((1-t)*th)/s,w2=Math.sin(t*th)/s;return a.map((x,i)=>w1*x+w2*b[i]);}
+const sm=t=>t*t*(3-2*t), clamp=t=>Math.max(0,Math.min(1,t));
+function hex(f){const h=((180+210*f)%360)/360,s=.85,l=.5;const a=s*Math.min(l,1-l);const k=n=>(n+h*12)%12;const g=n=>{const c=l-a*Math.max(-1,Math.min(k(n)-3,9-k(n),1));return Math.round(255*c).toString(16).padStart(2,'0')};return '#'+g(0)+g(8)+g(4);}
+
+let v,meta,nb,v0,QB,QD,sched=[],tEnd,tDeep0,zA,zB,ZC;
+const ZSPIN=1.0,ZBRIDGE=1.0,ZDEEP=1.0;
+let MP,aB,aD;
+const zOf=f=>ZC-(ZC-zA)/f;
+function zoomAt(i){ if(i<90)return ZSPIN; if(i<P1)return ZSPIN+(ZBRIDGE-ZSPIN)*sm((i-90)/(P1-90)); if(i<tEnd||!QD)return ZBRIDGE;
+  if(i<tDeep0)return ZBRIDGE+(ZDEEP-ZBRIDGE)*sm(Math.min(1,1.8*(i-tEnd)/(tDeep0-tEnd))); return ZDEEP;}
+window.ready=(async()=>{
+  meta=await (await fetch(CFG.dir+'/meta.json')).json();nb=meta.n;
+  v=$3Dmol.createViewer(document.getElementById('v'),{backgroundColor:'white',antialias:true});
+  for(let i=0;i<nb;i++){v.addModel(await (await fetch(CFG.dir+'/r'+String(i).padStart(2,'0')+'.pdb')).text(),'pdb');}
+  for(let i=0;i<nb;i++){v.addModel(await (await fetch(CFG.dir+'/b'+String(i).padStart(2,'0')+'.pdb')).text(),'pdb');}
+  v.setStyle({},{});
+  v.zoomTo({model:0});zA=v.getView()[3];v.zoom(2.0);zB=v.getView()[3];ZC=2*zB-zA;v.zoomTo({model:0});v.render();v0=v.getView();
+  const W=(END-START)/nb; for(let k=0;k<nb;k++)sched.push([START+k*W,START+(k+1)*W]);
+  tEnd=END;tDeep0=END;
+  MP=alignTo(meta.axis,[0,1,0]);AK=meta.cent.map(c=>faceAngle(MP,c));
+  for(let k=1;k<nb;k++)AK[k]=AK[k-1]+wrap(AK[k]-AK[k-1]);
+  QB=true;QD=null;
+  return true;
+})();
+let AK=[];
+function angleAt(i){
+  const W=sched[0][1]-sched[0][0],TR=Math.min(10,W*0.45);
+  if(i<START)return AK[0]-360*(1-sm(i/START))+0;
+  let k=Math.min(nb-1,Math.floor((i-START)/W));
+  const into=i-sched[k][0];let ang=AK[k]+DRIFT_B*0.25*((i-sched[k][0])/W);
+  if(k<nb-1){const tt=(into-(W-TR/2))/TR; if(tt>0){const f=sm(clamp(tt));ang=AK[k]*(1-f)+AK[k+1]*f;}}
+  if(k>0){const tt=(into+TR/2)/TR; if(tt<1){const f=sm(clamp(tt));ang=AK[k-1]*(1-f)+AK[k]*f;}}
+  return ang;
+}
+window.render=(i,draw=true)=>{
+  let act=0;for(let k=0;k<nb;k++){if(sched[k][0]<=i)act=k;}
+  const q=toQuat(mul(rotX(TILT),mul(rotY(angleAt(i)),MP)));
+  if(draw)v.setView([v0[0],v0[1],v0[2],zOf(zoomAt(i)),q[0],q[1],q[2],q[3]]);
+  if(window._act!==act){for(let k=0;k<nb;k++)v.setStyle({model:k},k==act?{cartoon:{color:'#8d96a6',thickness:0.5,arrows:false}}:{});window._act=act;}
+  let shown=0,site='';
+  for(let k=0;k<nb;k++){
+    const [s0,e0]=sched[k];const F=Math.min(4,(e0-s0)/3);
+    let op=0;if(i>=s0&&i<=e0){op=Math.max(0,Math.min(1,(i-s0)/F,(e0-i)/F));}
+    if(i>=s0&&i<e0){shown=k+1;site=meta.sites[k];}
+    const on=op>0.01; const surfOn=on||(k==act);
+    if(on){v.setStyle({model:nb+k},{cartoon:{color:PAL[k%PAL.length],opacity:op,thickness:1.2}});}
+    else if(window['_v'+k]){v.setStyle({model:nb+k},{});}
+    window['_v'+k]=on?1:0;
+  }
+  document.getElementById('sub').textContent = i<START-6 ? CFG.tgt : CFG.sub;
+  document.getElementById('cnt').innerHTML = shown? '<b style="color:'+PAL[(shown-1)%PAL.length]+'">'+shown+'</b> of '+nb+' · '+meta.src[shown-1]+', '+site+' site, '+meta.len[shown-1]+' aa<div class="sc">ipSAE '+meta.ipsae[shown-1].toFixed(2)+' · ipTM '+meta.iptm[shown-1].toFixed(2)+' · '+meta.hit[shown-1]+' of '+meta.tot[shown-1]+' hotspots</div>' : '';
+  document.getElementById('bar').style.width=(100*i/(N-1))+'%';
+  if(draw)v.render();
+};
+// convention check used while developing: compare 3Dmol's own rotate() with the quaternion built here
+window.calibrate=()=>{const zt=(()=>{v.zoomTo({model:0});const a=v.getView()[3];v.zoom(1.5);const b=v.getView()[3];v.zoomTo({model:0});return {zA:zA,ZC:ZC,pred:zOf(1.5),meas:b,base:a};})();v.setView(v0);v.rotate(30,'y');const a=v.getView().slice(4);v.setView(v0);v.rotate(30,'x');const b=v.getView().slice(4);v.setView(v0);return {zt:zt,ry30:a,rx30:b,mine_ry30:toQuat(rotY(30)),mine_rx30:toQuat(rotX(30)),v0:v0};};
+</script></body></html>

@@ -46,3 +46,16 @@ Checked by eye on Linux (software GL). The PowerShell scripts were run on Window
 Every Boltz complex has no heavy-atom pair closer than 2.4 A. Bridge-site designs touch 7 to 15 of the 18 bridge hotspots; the four
 deep-site designs touch 3 to 5 of the 9 deep hotspots at 4.5 A and also sit on the ECD and upper cleft. Two bridge-designed binders
 (ranks 5 and 19) reach 8 of 9 deep hotspots. These are predictions, not experiments.
+
+## Two more styles (same data, same 25 s timeline)
+Both use the grey cartoon receptor (one receptor per complex, swapped while that binder is shown) with the binder as a coloured cartoon.
+| Style | Page | Render | Output |
+|---|---|---|---|
+| Dark, 1920x1080, right-hand info panel (rank, method, site, length, hotspots touched, ipSAE / ipTM / binder pLDDT) | `page_dark.html` | `python3 render_dark.py <port>` | `fr_dark/` |
+| White, 1080x1350, same header and fonts as the first version, text line with method, site, length, scores, hotspots | `page_white.html` | `python3 render_white.py <port>` | `fr_white/` |
+
+`build_boltz_complexes.py` now also writes `src`, `len`, `plddt`, `hit`, `tot` into `meta.json`, so `top20.csv` needs the columns
+`priority_rank,site,source,sequence,length,iptm,ipsae,plddt,hotspots_hit,hotspots_total` (`plddt` as 0 to 1; see `top20.example.csv`).
+Encode with the same ffmpeg line, e.g. `ffmpeg -framerate 24 -i fr_dark/f%04d.png -c:v libx264 -pix_fmt yuv420p -crf 18 -movflags +faststart -an dark.mp4`.
+Run each render as one foreground command (or a properly detached job) and give it a free port; a render started from a shell that then exits stops partway.
+The dark layout was inspired by another participant's GLP1R video; nothing was copied from it.

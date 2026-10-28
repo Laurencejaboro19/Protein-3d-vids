@@ -29,5 +29,5 @@ ca=np.array([refca[n] for n in sorted(refca)])-cen; ns=np.array(sorted(refca))
 axis=np.linalg.svd(ca-ca.mean(0))[2][0]
 if ca[ns<130].mean(0)@axis<ca[ns>300].mean(0)@axis: axis=-axis
 cl=[np.mean(c,0).tolist() for c in allcen]
-json.dump({"cent":cl,"iptm":[float(T[k]["iptm"]) for k in order],"ipsae":[float(T[k]["ipsae"]) for k in order],"n":len(order),"ranks":order,"sites":[T[k]["site"] for k in order],"dirs":{s:np.mean(v,0).tolist() for s,v in cents.items() if v},"axis":axis.tolist()},open("glp1r_bz/meta.json","w"))
+json.dump({"cent":cl,"iptm":[float(T[k]["iptm"]) for k in order],"ipsae":[float(T[k]["ipsae"]) for k in order],"n":len(order),"ranks":order,"sites":[T[k]["site"] for k in order],"src":[T[k]["source"] for k in order],"len":[int(T[k]["length"]) for k in order],"plddt":[float(T[k]["plddt"]) for k in order],"hit":[int(T[k]["hotspots_hit"]) for k in order],"tot":[int(T[k]["hotspots_total"]) for k in order],"dirs":{s:np.mean(v,0).tolist() for s,v in cents.items() if v},"axis":axis.tolist()},open("glp1r_bz/meta.json","w"))
 
