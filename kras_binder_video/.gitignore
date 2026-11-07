@@ -1,0 +1,10 @@
+# designs are unpublished: never commit sequences, structures or renders
+*.csv
+*.cif
+*.zip
+*.mp4
+*.png
+work/
+kras_bz/
+fr_kras/
+job_ids.txt
