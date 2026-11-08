@@ -5,7 +5,7 @@ The 20 final binders appear one after another, each as its own Boltz-2.1 refold 
 On screen for every binder: the three ipSAE values (G12D, WT, peptide-free HLA) from the Boltz-2 screening, plus length and tier.
 
 Adapted from `../tfr1_binder_video`. Differences: target is HLA (chain A) + b2m (B) + peptide (C), binder is chain D; frames are aligned on HLA CA atoms;
-one shared target model instead of one per binder; camera looks down onto the groove (tilt) with the vertical axis along HLA+b2m.
+one shared target model instead of one per binder; opaque target surface, camera tilted to look down into the groove so the gold peptide shows under each binder.
 
 ## Pipeline (what worked, in order)
 | Step | File | Where | What it does |

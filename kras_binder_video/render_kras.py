@@ -7,7 +7,7 @@ class Q(http.server.SimpleHTTPRequestHandler):
     def log_message(self,*a):pass
 srv=http.server.ThreadingHTTPServer(('127.0.0.1',port),functools.partial(Q,directory='.'))
 threading.Thread(target=srv.serve_forever,daemon=True).start()
-out='fr_kras';os.makedirs(out,exist_ok=True)
+out=__import__('os').environ.get('FR','fr_kras');os.makedirs(out,exist_ok=True)
 with sync_playwright() as p:
     b=p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
     pg=b.new_page(viewport={'width':1080,'height':1350},device_scale_factor=1)
