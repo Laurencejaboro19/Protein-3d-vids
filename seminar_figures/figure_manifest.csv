@@ -1,0 +1,30 @@
+figure,panel,pdb_id,contents,method,resolution,source
+1,,,General structure of an amino acid,,,"Tyagi.anuj, Wikimedia Commons, CC BY 3.0"
+2,a,4INS,Insulin (Sus scrofa),X-ray crystallography,1.5 A,RCSB PDB
+2,b,1MBN,Myoglobin (sperm whale),X-ray crystallography,2.0 A,RCSB PDB
+2,c,1LYZ,Hen egg-white lysozyme,X-ray crystallography,2.0 A,RCSB PDB
+2,d,1A3N,Human deoxyhaemoglobin,X-ray crystallography,1.8 A,RCSB PDB
+3,a,1MBN,Myoglobin (alpha-helix example),X-ray crystallography,2.0 A,RCSB PDB
+3,b,1EMA,Green fluorescent protein (beta barrel),X-ray crystallography,1.9 A,RCSB PDB
+4,a,,X-ray diffraction instrument,,,"U.S. Department of Energy, public domain"
+4,b,,Cryo-electron microscope (Titan Krios),,,"Hiramano92, Wikimedia Commons, CC BY-SA 4.0"
+4,c,,NMR spectrometer,,,"Sarka Na kopci, Wikimedia Commons, CC BY-SA 4.0"
+5,a,7KI0,Semaglutide-GLP-1 receptor-Gs complex,Cryo-electron microscopy,2.50 A,Zhang et al. (2021)
+5,b,1N8Z,HER2 with Herceptin Fab,X-ray crystallography,2.52 A,Cho et al. (2003)
+6,,,Induced fit model,,,"LadyofHats, Wikimedia Commons, public domain"
+7,,8SK7,Designed binder with its target,X-ray crystallography,2.93 A,Watson et al. (2023)
+8,,,Deep learning in the protein design workflow,,,Watson et al. (2023); Dauparas et al. (2022)
+9,,,Design to measured binding affinity workflow,,,"Cotet et al. (2025), Figure 2"
+10,a,7SGE,SKYCovione designed nanoparticle antigen,Cryo-electron microscopy,,Burley et al. (2025)
+10,b,,SKYCovione licensed product,,,SK bioscience
+11,,,RFD4-Proteina open model release,,,NVIDIA (2026)
+12,,7JZU,LCB1 with SARS-CoV-2 spike RBD,X-ray crystallography,3.1 A,Cao et al. (2020)
+13,a,6DG5,Neo-2/15 with its receptor,X-ray crystallography,,Silva et al. (2019)
+13,b,2B5I,Natural interleukin-2 with receptor,X-ray crystallography,,Silva et al. (2019)
+14,a,,Venom milked from a snake,,,"Vassil, Wikimedia Commons, CC0"
+14,b,9BK5,Designed protein with three-finger toxin,X-ray crystallography,2.68 A,Vazquez Torres et al. (2025)
+15,a,,Monoclonal antibody production by immunisation,,,"Adenosine, Wikimedia Commons, CC BY-SA 3.0"
+15,b,9NFU,Designed scFv with C. difficile toxin B,Cryo-electron microscopy,3.60 A,Bennett et al. (2025)
+16,a,8GJI,Designed binder of a helical peptide hormone,X-ray crystallography,,Vazquez Torres et al. (2024)
+16,b,9DEG,Designed serine hydrolase,X-ray crystallography,,Lauko et al. (2025)
+17,,,The five stages of drug development,,,U.S. Food and Drug Administration (2018)
